@@ -1,19 +1,26 @@
 <?php
 include 'conexao.php';
 
-// Verifica o método HTTP
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
-// Recebe dados JSON
 $input = json_decode(file_get_contents('php://input'), true);
 
-$stmt = $conn->prepare("INSERT INTO tarefas (data, tarefa) VALUES (?, ?)");
-$stmt->bind_param("ss", $input['data'], $input['tarefa']);
+// Inserir nova tarefa
+if (isset($input['data'], $input['tarefa'])) {
+    $stmt = $conn->prepare("INSERT INTO tarefas (data, tarefa) VALUES (?, ?)");
+    $stmt->bind_param("ss", $input['data'], $input['tarefa']);
+}
+
+// Marcar como concluída
+if (isset($input['concluir'], $input['id'])) {
+    $stmt = $conn->prepare("UPDATE tarefas SET concluida = TRUE WHERE id = ?");
+    $stmt->bind_param("i", $input['id']);
+}
 
 if ($stmt->execute()) {
-    echo json_encode(["success" => true, "message" => "Tarefa salva!"]);
+    echo json_encode(["success" => true]);
 } else {
     echo json_encode(["error" => $stmt->error]);
 }
